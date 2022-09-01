@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <style>
+    body {
+      text-align: center;
+    }
+    #canvas {
+      border: 1px solid black;
+    }
+    .content {
+      display: flex;
+      justify-content: center;
+    }
+    .btn {
+      width: 150px;
+      height: 50px;
+      line-height: 50px;
+      color: #fff;
+      background: #443aff;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .right {
+      margin-left: 50px;
+      display: flex;
+      align-items: center;
+    }
+    .right .btn:active {
+      background: #342fba;
+    }
+  </style>
+  <body>
+    <div class="content">
+      <canvas id="canvas" width="600" height="600"></canvas>
+      <div class="right">
+        <div class="btn" onclick="init()">开始</div>
+      </div>
+    </div>
+    <script>
+      const canvas = document.getElementById("canvas")
+      ctx = canvas.getContext("2d")
+
+      // 初始化的x y坐标
+      let x = 8
+      let y = 8
+
+      // 每一节蛇长度
+      let size = 8
+
+      // 蛇身长度
+      let len = 1
+
+      // 0是左 1是下 2是右 3是上
+      let direction = 2
+
+      // 食物的x y
+      let foodX, foodY
+
+      let obstacleX, obstacleY
+
+      // 蛇身经过的地方
+      let map = []
+
+      // 障碍物坐标
+      let obstacleMap = []
+
+      // 食物颜色
+      let foodColor = ""
+
+      function game() {
+        // 方向判断
+        handleDirection()
+
+        // 清除画布
+        if (map.length > len) {
+          let first = map.shift()
+          ctx.clearRect(first.x, first.y, size, size)
+        }
+
+        // 边界检测
+        if (x >= canvas.width || x == 0 || y >= canvas.height || y == 0) {
+          clearInterval(time)
+        }
+
+        // 碰撞检测
+        let collision = map.some(item => item.x === x && item.y === y)
+        if (collision) {
+          clearInterval(time)
+        }
+
+        Snakedraw(x, y, foodColor)
+
+        // 判断是否吃到食物
+        if (foodX == x && foodY == y) {
+          len++
+          food()
+        }
+
+        // 判断是否碰到障碍
+        const sh = map[map.length - 1]
+        let isTrue = obstacleMap.some(item => {
+          return sh.x >= item.x && sh.x <= item.x + 40 && sh.y === item.y
+        })
+        if (isTrue) {
+          console.log("结束")
+          clearInterval(time)
+        }
+      }
+
+      function Snakedraw(x, y, color = "black") {
+        // 存入蛇的路径
+        map.push({ x, y })
+        ctx.fillStyle = color
+        ctx.fillRect(x, y, size, size)
+      }
+
+      // 食物
+      function food() {
+        foodX = Math.floor(Math.random() * 75) * 8
+        foodY = Math.floor(Math.random() * 75) * 8
+        let has = map.some(elm => elm.x === foodX && elm.y === foodY)
+        if (has) {
+          return food()
+        }
+        foodColor = randomColor()
+        ctx.fillStyle = foodColor
+        ctx.fillRect(foodX, foodY, size, size)
+      }
+
+      // 障碍物
+      function obstacle() {
+        // 障碍物x y
+        let obstacleX = Math.floor(Math.random() * 75) * 8
+        let obstacleY = Math.floor(Math.random() * 75) * 8
+
+        obstacleMap.push({ x: obstacleX, y: obstacleY })
+        ctx.fillStyle = "red"
+        ctx.fillRect(obstacleX, obstacleY, 40, size)
+      }
+
+      // 方向
+      function handleDirection() {
+        switch (direction) {
+          case 0:
+            x -= size
+            break
+          case 1:
+            y -= size
+            break
+          case 2:
+            x += size
+            break
+          case 3:
+            y += size
+            break
+        }
+      }
+
+      // 随机生成rgb值
+      function randomColor() {
+        const r = Math.floor(Math.random() * 255)
+        const g = Math.floor(Math.random() * 255)
+        const b = Math.floor(Math.random() * 255)
+        return `rgb(${r},${g},${b})`
+      }
+
+      function init() {
+        for (let i = 0; i < Math.floor(Math.random() * size); i++) {
+          obstacle()
+        }
+        food()
+        time = setInterval(() => {
+          game()
+        }, 100 * len + 1)
+      }
+
+      document.addEventListener("keydown", e => {
+        // 0是左 1是下 2是右 3是上
+        if (e.keyCode >= 37 && e.keyCode <= 40) {
+          let code = e.keyCode - 37
+          if ((code === 1 && direction === 3) || (code === 3 && direction === 1)) {
+            return
+          } else if ((code === 0 && direction === 2) || (code === 2 && direction === 0)) {
+            return
+          } else {
+            direction = code
+          }
+        }
+      })
+    </script>
+  </body>
+</html>
